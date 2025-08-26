@@ -1,0 +1,26 @@
+# Prerequisites: Ensure the Active Directory module is installed.
+# To install the module, use: Install-WindowsFeature RSAT-AD-PowerShell
+
+# Get all enabled Active Directory users
+# Select the Username (SamAccountName) and check the PasswordExpired property
+
+
+$users = Get-ADUser -Filter "Enabled -eq '$true'" -Properties PasswordExpired | `
+    Where-Object { $_.PasswordExpired -eq $false } | `
+    Select-Object Name, SamAccountName, PasswordExpired
+
+# Display the results
+
+if ($users.Count -gt 0) {
+    Write-Host "Found $($users.Count) active users with non-expired passwords:" -ForegroundColor Green
+    $users | Format-Table
+} else {
+    Write-Host "No active users with non-expired passwords found." -ForegroundColor Yellow
+}
+
+# Optional: Export the results to a CSV file
+$csvPath = "C:\temp\Active_Users_NonExpired_Passwords.csv"
+if ($users.Count -gt 0) {
+    $users | Export-Csv -Path $csvPath -NoTypeInformation
+    Write-Host "Exported results to: $csvPath" -ForegroundColor Green
+}
